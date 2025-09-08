@@ -199,8 +199,8 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Button className="w-full" size="lg">
-                    Thanh toán
+                  <Button className="w-full" size="lg" asChild>
+                    <Link href="/checkout">Tiến hành đặt hàng</Link>
                   </Button>
                   <Button
                     variant="outline"

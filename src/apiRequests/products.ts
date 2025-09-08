@@ -16,6 +16,13 @@ export interface Product {
   quantity: number;
   sold: number;
   images: Array<{
+    type: 'image' | 'video'; // Add type for media
+    url: string;
+    alt: string;
+    isMain: boolean;
+    order: number;
+    _id?: string;
+  }>;
     url: string;
     alt: string;
     isMain: boolean;

@@ -12,6 +12,7 @@ export interface Review {
   comment: string;
   isVerified: boolean;
   helpfulCount: number;
+  images?: { url: string; alt?: string }[];
   createdAt: string;
   updatedAt: string;
 }

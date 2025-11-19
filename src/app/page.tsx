@@ -1,28 +1,37 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import useTranslations from "@/i18n/useTranslations";
 import {
   Leaf,
   ShoppingBag,
   Menu,
   X,
+  Eye,
   Star,
   ChevronRight,
   ChevronLeft,
   ArrowUp,
   Heart,
   XCircle,
+  Quote,
 } from "lucide-react";
+import AdminImageCompany from "../../public/images/directorCo.png";
+import Image from "next/image";
+import Link from "next/link";
+import { CursorEffect } from "@/components/cursor-effect";
+import { MapsLocationCompany } from "@/components/location-company-maps";
 
-// --- TYPE DEFINITIONS (ĐỊNH NGHĨA KIỂU DỮ LIỆU) ---
-type Product = {
+interface Product {
   id: number;
+  longDescription?: string;
   name: string;
-  description: string;
-  imageUrl: string;
-  price: string;
-  longDescription: string;
-};
+  price: number;
+  category: string;
+  imageUrl?: string;
+  image: string;
+  rating: number;
+}
 
 type Testimonial = {
   id: number;
@@ -130,34 +139,39 @@ const heroSlides: Slide[] = [
 const featuredProducts: Product[] = [
   {
     id: 1,
-    name: "Thu Hoạch Trái Vải Tươi",
-    description: "Mọi người cùng nhau - vui vẻ thu hoạch.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1659482633309-ccd1e316c592?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OTZ8fGZydWl0c3xlbnwwfHwwfHx8MA%3D%3D",
-    price: "120.000đ",
-    longDescription:
-      "Được ép lạnh từ những trái vải thiều căng mọng nhất, sản phẩm giữ trọn vị ngọt thanh và hàm lượng vitamin C dồi dào. Không thêm đường, không chất bảo quản, mang đến sự sảng khoái thuần khiết.",
+    name: "Vải Thiều Thanh Hà Thượng Hạng",
+    price: 150000,
+    category: "Trái cây tươi",
+    rating: 5,
+    image:
+      "https://res.cloudinary.com/duw5dconp/image/upload/v1757466581/shopdev/products/g5c04xevw8kmjfcs948t.png",
   },
   {
     id: 2,
-    name: "Thu Hoạch Trái Vải Tươi",
-    description:
-      "Sự kết hợp tinh tế giữa vị ngọt của vải và ánh sáng của mặt trời.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1622219750989-f24af3d4a7ca?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OTh8fGZydWl0c3xlbnwwfHwwfHx8MA%3D%3D",
-    price: "95.000đ",
-    longDescription:
-      "Trà xanh thượng hạng được ướp hương hoa lài tự nhiên, hòa quyện cùng syrup vải đậm đà. Mỗi ngụm trà là một bản giao hưởng của hương và vị, giúp thư giãn tinh thần và thanh lọc cơ thể.",
+    name: "Trà Vải Hạt Chia Organic",
+    price: 65000,
+    category: "Đồ uống",
+    rating: 4,
+    image:
+      "https://res.cloudinary.com/duw5dconp/image/upload/v1757466581/shopdev/products/g5c04xevw8kmjfcs948t.png",
   },
   {
     id: 3,
-    name: "Mứt Vải Dẻo Cao Cấp",
-    description: "Món quà ngọt ngào, đậm đà hương vị truyền thống.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1623227866882-c005c26dfe41?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTE0fHxmcnVpdHN8ZW58MHx8MHx8fDA%3D",
-    price: "180.000đ",
-    longDescription:
-      "Thịt vải được sên dẻo với đường phèn theo công thức bí truyền, giữ được độ dai mềm và vị ngọt đậm đà. Thích hợp dùng kèm trà chiều hoặc làm quà tặng ý nghĩa cho người thân.",
+    name: "Mứt Vải Hoa Hồng",
+    price: 120000,
+    category: "Thực phẩm chế biến",
+    rating: 5,
+    image:
+      "https://res.cloudinary.com/duw5dconp/image/upload/v1757466581/shopdev/products/g5c04xevw8kmjfcs948t.png",
+  },
+  {
+    id: 4,
+    name: "Vải Sấy Khô Nguyên Vỏ",
+    price: 200000,
+    category: "Đồ khô",
+    rating: 5,
+    image:
+      "https://res.cloudinary.com/duw5dconp/image/upload/v1757466581/shopdev/products/g5c04xevw8kmjfcs948t.png",
   },
 ];
 
@@ -633,132 +647,130 @@ const MarqueeBannerSection: React.FC = () => {
   );
 };
 
-const InteractiveShowcaseSection: React.FC = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  return (
-    <section
-      id="experience"
-      className="relative min-h-screen bg-rose-50 py-24 flex items-center justify-center overflow-hidden"
-    >
-      <FadeInWhenVisible>
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16">
-            <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800">
-              Trải Nghiệm LALA-LYCHEE
-            </h2>
-            <p className="mt-3 text-lg text-slate-500 max-w-2xl mx-auto">
-              Mỗi sản phẩm là một câu chuyện, một cảm xúc. Hãy chọn trải nghiệm
-              của riêng bạn.
-            </p>
-            <p className="mt-2 text-sm text-slate-400 italic">
-              (Nhấp vào một trải nghiệm để xem hình ảnh)
-            </p>
-          </div>
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div
-              className="relative w-full rounded-2xl overflow-hidden shadow-xl"
-              style={{ paddingBottom: "125%" }}
-            >
-              {experiences.map((exp, index) => (
-                <img
-                  key={exp.id}
-                  src={exp.imageUrl}
-                  alt={exp.title}
-                  onError={handleImageError}
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${
-                    activeIndex === index ? "opacity-100" : "opacity-0"
-                  }`}
-                />
-              ))}
-            </div>
-            <div className="flex flex-col items-start space-y-8">
-              {experiences.map((exp, index) => (
-                <div
-                  key={exp.id}
-                  onClick={() => setActiveIndex(index)}
-                  className="cursor-pointer group w-full"
-                >
-                  <h3
-                    className={`font-serif text-4xl md:text-5xl font-bold transition-colors duration-300 ${
-                      activeIndex === index
-                        ? "text-rose-500"
-                        : "text-slate-400 group-hover:text-slate-600"
-                    }`}
-                  >
-                    {exp.title}
-                  </h3>
-                  <div className="relative h-0.5 mt-2 w-full bg-rose-200/50">
-                    <div
-                      className={`absolute top-0 left-0 h-full bg-rose-500 transition-all duration-500 ease-out ${
-                        activeIndex === index
-                          ? "w-full"
-                          : "w-0 group-hover:w-full"
-                      }`}
-                    ></div>
-                  </div>
-                  <p
-                    className={`mt-4 text-slate-600 max-w-sm transition-all duration-500 ease-in-out ${
-                      activeIndex === index
-                        ? "opacity-100 max-h-40"
-                        : "opacity-0 max-h-0"
-                    }`}
-                  >
-                    {exp.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </FadeInWhenVisible>
-    </section>
-  );
-};
-
-const AboutSection: React.FC = () => {
+const AboutSection = () => {
   const t = useTranslations();
 
   return (
-    <section id="about" className="py-24 bg-white">
-      <FadeInWhenVisible>
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center">
-            <div className="rounded-lg overflow-hidden shadow-2xl">
-              <img
-                src="https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fGZydWl0c3xlbnwwfHwwfHx8MA%3D%3D"
-                alt="Vườn vải LALA-LYCHEE"
-                onError={handleImageError}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div>
-              <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800">
+    <section
+      id="about"
+      className="relative py-24 overflow-hidden bg-stone-50/50"
+    >
+      {/* Background Decor Elements */}
+      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-rose-100 rounded-full blur-3xl opacity-30 mix-blend-multiply pointer-events-none" />
+      <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-orange-100 rounded-full blur-3xl opacity-30 mix-blend-multiply pointer-events-none" />
+
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        <div className="grid lg:grid-cols-12 gap-12 items-start">
+          {/* Cột Hình Ảnh (Chiếm 5 phần) */}
+          <div className="lg:col-span-5 relative group">
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="relative"
+            >
+              {/* Khung viền trang trí */}
+              <div className="absolute inset-0 bg-rose-600 rounded-2xl rotate-3 transform scale-[1.02] opacity-20 group-hover:rotate-2 transition-transform duration-500" />
+
+              {/* Container hình ảnh chính */}
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[3/4] bg-white">
+                <Image
+                  src={AdminImageCompany}
+                  alt="Giám Đốc LALA-LYCHEEE"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+
+                {/* Overlay Gradient cho text trên ảnh */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-90" />
+
+                {/* Thông tin Giám đốc trên ảnh */}
+                <div className="absolute bottom-0 left-0 w-full p-6 text-white">
+                  <p className="text-sm font-medium tracking-wider uppercase text-rose-200 mb-1">
+                    Founder & CEO
+                  </p>
+                  <h3 className="text-2xl font-serif font-bold">
+                    PHẠM VĂN NHÂN
+                  </h3>
+                  <p className="text-white/80 text-sm mt-2 italic">
+                    "Mang niềm tự hào trở lại với quê hương."
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Cột Nội Dung (Chiếm 7 phần) */}
+          <div className="lg:col-span-7 space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <span className="h-px w-12 bg-rose-600"></span>
+                <span className="text-rose-600 font-bold tracking-widest uppercase text-xs">
+                  Về Chúng Tôi
+                </span>
+              </div>
+
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading text-slate-900 leading-[1.1] mb-8">
                 {t("site.about_title")}
               </h2>
-              <p className="mt-4 text-lg text-slate-600">
-                LALA-LYCHEE ra đời từ niềm đam mê với trái vải - một loại quả
-                đặc sản của Việt Nam. Chúng tôi tin rằng, đằng sau vị ngọt ngào
-                ấy là cả một câu chuyện về văn hóa, về sự chăm sóc tỉ mỉ và về
-                tinh hoa của đất trời.
-              </p>
-              <p className="mt-4 text-slate-600">
-                Mỗi sản phẩm đều là một tác phẩm nghệ thuật, được tạo ra từ
-                nguồn nguyên liệu tuyển chọn khắt khe và quy trình sản xuất hiện
-                đại, nhằm mang đến cho bạn trải nghiệm vị giác đẳng cấp và trọn
-                vẹn nhất.
-              </p>
-              <a
-                href="#"
-                className="mt-6 inline-flex items-center text-rose-600 font-bold group"
-              >
-                Tìm hiểu thêm
-                <ChevronRight className="ml-1 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </a>
-            </div>
+
+              <div className="prose prose-lg text-slate-600 max-w-none font-body">
+                <p className="leading-relaxed text-justify">
+                  Sinh ra và lớn lên tại vùng quê{" "}
+                  <strong>Vĩnh Lập – Thanh Hà – Hải Dương</strong>, nơi được
+                  mệnh danh là “đất vải”, tôi hiểu sâu sắc cuộc sống còn nhiều
+                  khó khăn của người nông dân nơi đây. Vùng đất này đẹp nhưng
+                  nghèo, bốn bề là sông nước, giao thương hạn chế. Có một thời,
+                  tôi từng tự ti về quê hương mình đến mức không dám nói với bạn
+                  bè rằng mình đến từ Vĩnh Lập.
+                </p>
+
+                {/* Quote block với font Heading để nhấn mạnh */}
+                <div className="bg-rose-50/60 border-l-4 border-rose-500 p-8 my-10 rounded-r-xl relative group hover:bg-rose-50 transition-colors">
+                  <Quote className="absolute top-6 right-6 w-10 h-10 text-rose-200 -rotate-12 group-hover:text-rose-300 transition-colors" />
+                  <p className="italic text-slate-800 font-heading text-xl leading-relaxed relative z-10">
+                    "Bước ngoặt đến khi tôi có cơ duyên sang Nhật Bản... Chính
+                    vợ tôi là người đã chỉ ra cho tôi thấy những vẻ đẹp rất đỗi
+                    bình dị nhưng tuyệt vời của làng quê Vĩnh Lập."
+                  </p>
+                </div>
+
+                <p className="leading-relaxed text-justify">
+                  Chúng tôi đã đem những trái vải quê mình sang giới thiệu với
+                  bạn bè Nhật Bản, và từ đó tôi nhận ra rằng: Vùng đất mà trước
+                  đây tôi từng tự ti, thực chất lại là một nơi vô cùng đáng tự
+                  hào. Tôi hiểu rằng mình phải làm điều gì đó để thế hệ trẻ lớn
+                  lên tại đây có thể tự tin nói rằng:{" "}
+                  <span className="text-rose-700 font-bold">
+                    “Tôi sinh ra ở Vĩnh Lập.”
+                  </span>
+                </p>
+
+                <p className="leading-relaxed text-justify">
+                  Từ khát vọng đó, tôi bắt đầu hành trình đưa trái vải – tinh
+                  hoa của trời đất Thanh Hà – vươn ra thế giới.{" "}
+                  <strong>LALA-LYCHEEE</strong> ra đời với sứ mệnh mang vải
+                  thiều Vĩnh Lập đến với bạn bè quốc tế, tạo thêm công ăn việc
+                  làm cho bà con, để sau mỗi mùa vải, họ không còn cảnh thiếu
+                  việc, phải đi làm ăn xa.
+                </p>
+
+                <div className="mt-10 pt-8 border-t border-slate-200">
+                  <p className="text-lg text-slate-500 font-heading italic">
+                    Mỗi sản phẩm là một tác phẩm nghệ thuật, kết tinh từ nguồn
+                    nguyên liệu tuyển chọn và tình yêu quê hương xứ sở.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
-      </FadeInWhenVisible>
+      </div>
     </section>
   );
 };
@@ -779,8 +791,8 @@ const ProductQuickViewModal: React.FC<{
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-full md:w-1/2 h-64 md:h-auto">
-          <img
-            src={product.imageUrl}
+          <Image
+            src={product.imageUrl as string}
             alt={product.name}
             onError={handleImageError}
             className="w-full h-full object-cover"
@@ -817,38 +829,186 @@ const ProductQuickViewModal: React.FC<{
   );
 };
 
-const ProductCard: React.FC<{
-  product: Product;
-  onQuickViewClick: (product: Product) => void;
-}> = ({ product, onQuickViewClick }) => (
-  <div className="bg-white rounded-lg shadow-lg overflow-hidden group transform hover:-translate-y-2 transition-all duration-300 hover:shadow-xl">
-    <div className="relative overflow-hidden h-72">
-      <img
-        src={product.imageUrl}
-        alt={product.name}
-        onError={handleImageError}
-        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+// Component hiển thị sao đánh giá
+const RatingStars = ({ rating }: { rating: number }) => (
+  <div className="flex gap-0.5 text-yellow-400 text-xs">
+    {[...Array(5)].map((_, i) => (
+      <Star
+        key={i}
+        size={12}
+        fill={i < rating ? "currentColor" : "none"}
+        className={i < rating ? "" : "text-slate-300"}
       />
-      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-        <button
-          onClick={() => onQuickViewClick(product)}
-          className="bg-white text-rose-600 font-bold px-8 py-3 rounded-full shadow-lg transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 text-base hover:bg-rose-50"
-        >
-          Xem Nhanh
-        </button>
-      </div>
-    </div>
-    <div className="p-6 text-center">
-      <h3 className="font-serif text-xl font-bold text-slate-800">
-        {product.name}
-      </h3>
-      <p className="mt-2 text-slate-500 text-sm h-10">{product.description}</p>
-      <div className="mt-4">
-        <span className="text-lg font-bold text-rose-500">{product.price}</span>
-      </div>
-    </div>
+    ))}
   </div>
 );
+
+const ProductCard = ({
+  product,
+  onQuickView,
+}: {
+  product: Product;
+  onQuickView: (p: Product) => void;
+}) => {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 border border-stone-100"
+    >
+      {/* Image Section */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-stone-100">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+
+        {/* Badge Category */}
+        <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-slate-700 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
+          {product.category}
+        </span>
+
+        {/* Action Overlay Buttons */}
+        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
+          <button
+            onClick={() => onQuickView(product)}
+            className="transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-75 bg-white text-slate-900 hover:bg-rose-600 hover:text-white p-3 rounded-full shadow-lg"
+            title="Xem nhanh"
+          >
+            <Eye size={20} />
+          </button>
+          <button
+            className="transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-100 bg-white text-slate-900 hover:bg-rose-600 hover:text-white p-3 rounded-full shadow-lg"
+            title="Thêm vào giỏ"
+          >
+            <ShoppingBag size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* Info Section */}
+      <div className="p-6 text-center">
+        <div className="flex justify-center mb-2">
+          <RatingStars rating={product.rating} />
+        </div>
+        <h3
+          className="font-heading text-lg font-bold text-slate-900 mb-2 line-clamp-1 group-hover:text-rose-600 transition-colors cursor-pointer"
+          onClick={() => onQuickView(product)}
+        >
+          {product.name}
+        </h3>
+        <p className="font-body text-rose-600 font-semibold">
+          {new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+          }).format(product.price)}
+        </p>
+      </div>
+    </motion.div>
+  );
+};
+
+// const FeaturedProductsSection: React.FC = () => {
+//   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(
+//     null
+//   );
+//   const t = useTranslations();
+
+//   return (
+//     <>
+//       <ProductQuickViewModal
+//         product={quickViewProduct}
+//         onClose={() => setQuickViewProduct(null)}
+//       />
+//       <section id="products" className="py-24 bg-rose-50/50">
+//         <FadeInWhenVisible>
+//           <div className="container mx-auto px-6">
+//             <div className="text-center mb-16">
+//               <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800">
+//                 {t("site.featured_section")}
+//               </h2>
+//               <p className="mt-3 text-lg text-slate-500 max-w-2xl mx-auto">
+//                 Những sáng tạo độc đáo từ LALA-LYCHEE, mang đến hương vị không
+//                 thể nào quên.
+//               </p>
+//             </div>
+//             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-10 justify-center items-center">
+//               {featuredProducts.map((product) => (
+//                 <ProductCard
+//                   key={product.id}
+//                   product={product}
+//                   onQuickViewClick={setQuickViewProduct}
+//                 />
+//               ))}
+//             </div>
+//           </div>
+//         </FadeInWhenVisible>
+//       </section>
+//     </>
+//   );
+// };
+
+const MockModal = ({
+  product,
+  onClose,
+}: {
+  product: Product | null;
+  onClose: () => void;
+}) => {
+  if (!product) return null;
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className="bg-white rounded-3xl p-8 max-w-md w-full relative"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-slate-400 hover:text-rose-600"
+          >
+            <X size={24} />
+          </button>
+          <div className="text-center">
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-32 h-32 object-cover rounded-full mx-auto mb-4 shadow-lg"
+            />
+            <h3 className="font-heading text-2xl font-bold mb-2">
+              {product.name}
+            </h3>
+            <p className="text-rose-600 font-bold text-xl mb-4">
+              {new Intl.NumberFormat("vi-VN", {
+                style: "currency",
+                currency: "VND",
+              }).format(product.price)}
+            </p>
+            <p className="text-slate-500 text-sm mb-6">
+              Mô tả ngắn về sản phẩm sẽ hiển thị ở đây. Đây là phiên bản xem
+              nhanh (Quick View).
+            </p>
+            <button className="w-full bg-rose-600 text-white py-3 rounded-full font-bold hover:bg-rose-700 transition-colors">
+              Thêm vào giỏ hàng
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
 
 const FeaturedProductsSection: React.FC = () => {
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(
@@ -858,34 +1018,82 @@ const FeaturedProductsSection: React.FC = () => {
 
   return (
     <>
-      <ProductQuickViewModal
+      <section
+        id="products"
+        className="py-24 bg-gradient-to-b from-white to-rose-50/30 relative overflow-hidden"
+      >
+        {/* Inject Font Styles (Nếu chưa có ở global) */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+          @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+          
+          .font-heading { font-family: 'Playfair Display', serif; }
+          .font-body { font-family: 'Be Vietnam Pro', sans-serif; }
+        `,
+          }}
+        />
+
+        {/* Decor Background */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-rose-200 to-transparent" />
+        <div className="absolute -left-20 top-40 w-64 h-64 bg-rose-100/50 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          {/* Header Section */}
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <span className="text-rose-600 font-bold tracking-widest uppercase text-xs mb-3 block">
+                Bộ Sưu Tập Độc Quyền
+              </span>
+              <h2 className="font-heading text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+                {t("site.featured_section")}
+              </h2>
+              <div className="w-20 h-1 bg-rose-600 mx-auto rounded-full mb-6" />
+              <p className="font-body text-lg text-slate-500 leading-relaxed">
+                Những sáng tạo độc đáo từ{" "}
+                <strong className="text-rose-600">LALA-LYCHEE</strong>, kết tinh
+                hương vị ngọt ngào của đất trời và tâm huyết của người nông dân.
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Product Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {featuredProducts.map((product, index) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onQuickView={setQuickViewProduct}
+              />
+            ))}
+          </div>
+
+          {/* View All Button */}
+          <div className="text-center mt-16">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-white border-2 border-slate-900 text-slate-900 rounded-full font-bold hover:bg-slate-900 hover:text-white transition-colors duration-300 shadow-sm"
+            >
+              <Link href={"/products"}>
+                <span>Xem Tất Cả Sản Phẩm</span>
+              </Link>
+              <ShoppingBag size={18} />
+            </motion.button>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick View Modal */}
+      <MockModal
         product={quickViewProduct}
         onClose={() => setQuickViewProduct(null)}
       />
-      <section id="products" className="py-24 bg-rose-50/50">
-        <FadeInWhenVisible>
-          <div className="container mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800">
-                {t("site.featured_section")}
-              </h2>
-              <p className="mt-3 text-lg text-slate-500 max-w-2xl mx-auto">
-                Những sáng tạo độc đáo từ LALA-LYCHEE, mang đến hương vị không
-                thể nào quên.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {featuredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onQuickViewClick={setQuickViewProduct}
-                />
-              ))}
-            </div>
-          </div>
-        </FadeInWhenVisible>
-      </section>
     </>
   );
 };
@@ -956,250 +1164,253 @@ const CollectionSection: React.FC = () => {
   );
 };
 
-const CardStackSection: React.FC = () => {
-  const [cards, setCards] = useState(collectionSlides);
-  const [dragInfo, setDragInfo] = useState({
-    isDragging: false,
-    startX: 0,
-    currentX: 0,
-  });
-  const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(
-    null
-  );
-  const [lastAction, setLastAction] = useState<string | null>(null);
+// const CardStackSection: React.FC = () => {
+//   const [cards, setCards] = useState(collectionSlides);
+//   const [dragInfo, setDragInfo] = useState({
+//     isDragging: false,
+//     startX: 0,
+//     currentX: 0,
+//   });
+//   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(
+//     null
+//   );
+//   const [lastAction, setLastAction] = useState<string | null>(null);
 
-  const handleSwipe = (direction: "left" | "right") => {
-    setLastAction(
-      direction === "right" ? "Đã thêm vào yêu thích" : "Đã bỏ qua"
-    );
-    setExitDirection(direction);
-    setTimeout(() => {
-      setCards((prev) => {
-        const newCards = prev.slice(1);
-        if (newCards.length === 0) {
-          return collectionSlides;
-        }
-        return newCards;
-      });
-      setExitDirection(null);
-    }, 300); // Match animation duration
-  };
+//   const handleSwipe = (direction: "left" | "right") => {
+//     setLastAction(
+//       direction === "right" ? "Đã thêm vào yêu thích" : "Đã bỏ qua"
+//     );
+//     setExitDirection(direction);
+//     setTimeout(() => {
+//       setCards((prev) => {
+//         const newCards = prev.slice(1);
+//         if (newCards.length === 0) {
+//           return collectionSlides;
+//         }
+//         return newCards;
+//       });
+//       setExitDirection(null);
+//     }, 300); // Match animation duration
+//   };
 
-  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    setDragInfo({ isDragging: true, startX: clientX, currentX: clientX });
-  };
+//   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+//     const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+//     setDragInfo({ isDragging: true, startX: clientX, currentX: clientX });
+//   };
 
-  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!dragInfo.isDragging) return;
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    setDragInfo((prev) => ({ ...prev, currentX: clientX }));
-  };
+//   const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+//     if (!dragInfo.isDragging) return;
+//     const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+//     setDragInfo((prev) => ({ ...prev, currentX: clientX }));
+//   };
 
-  const handleDragEnd = () => {
-    if (!dragInfo.isDragging) return;
+//   const handleDragEnd = () => {
+//     if (!dragInfo.isDragging) return;
 
-    const deltaX = dragInfo.currentX - dragInfo.startX;
-    if (Math.abs(deltaX) > 100) {
-      // Swipe threshold
-      handleSwipe(deltaX > 0 ? "right" : "left");
-    }
+//     const deltaX = dragInfo.currentX - dragInfo.startX;
+//     if (Math.abs(deltaX) > 100) {
+//       // Swipe threshold
+//       handleSwipe(deltaX > 0 ? "right" : "left");
+//     }
 
-    setDragInfo({ isDragging: false, startX: 0, currentX: 0 });
-  };
+//     setDragInfo({ isDragging: false, startX: 0, currentX: 0 });
+//   };
 
-  const topCardStyle = () => {
-    if (exitDirection === "left")
-      return {
-        transform: "translateX(-120%) rotate(-18deg)",
-        opacity: 0,
-        willChange: "transform",
-      };
-    if (exitDirection === "right")
-      return {
-        transform: "translateX(120%) rotate(18deg)",
-        opacity: 0,
-        willChange: "transform",
-      };
+//   const topCardStyle = () => {
+//     if (exitDirection === "left")
+//       return {
+//         transform: "translateX(-120%) rotate(-18deg)",
+//         opacity: 0,
+//         willChange: "transform",
+//       };
+//     if (exitDirection === "right")
+//       return {
+//         transform: "translateX(120%) rotate(18deg)",
+//         opacity: 0,
+//         willChange: "transform",
+//       };
 
-    if (dragInfo.isDragging) {
-      const deltaX = dragInfo.currentX - dragInfo.startX;
-      const rotation = deltaX / 20;
-      return {
-        transform: `translateX(${deltaX}px) rotate(${rotation}deg)`,
-        transition: "none",
-      };
-    }
-    return {};
-  };
+//     if (dragInfo.isDragging) {
+//       const deltaX = dragInfo.currentX - dragInfo.startX;
+//       const rotation = deltaX / 20;
+//       return {
+//         transform: `translateX(${deltaX}px) rotate(${rotation}deg)`,
+//         transition: "none",
+//       };
+//     }
+//     return {};
+//   };
 
-  const displayedCards = cards.slice(0, 3).reverse();
+//   const displayedCards = cards.slice(0, 3).reverse();
 
-  // Derived values for visual feedback during drag
-  const deltaX = dragInfo.isDragging ? dragInfo.currentX - dragInfo.startX : 0;
-  const likeOpacity = Math.min(1, Math.max(0, deltaX / 140));
-  const nopeOpacity = Math.min(1, Math.max(0, -deltaX / 140));
+//   // Derived values for visual feedback during drag
+//   const deltaX = dragInfo.isDragging ? dragInfo.currentX - dragInfo.startX : 0;
+//   const likeOpacity = Math.min(1, Math.max(0, deltaX / 140));
+//   const nopeOpacity = Math.min(1, Math.max(0, -deltaX / 140));
 
-  return (
-    <section id="card-stack" className="py-24 bg-rose-50/50 overflow-x-hidden">
-      <style jsx>{`
-        .card-shadow {
-          box-shadow: 0 20px 60px -20px rgba(2, 6, 23, 0.35);
-        }
-        .ring-focus:focus-visible {
-          outline: none;
-          box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.45);
-        }
-        .swipe-badge {
-          letter-spacing: 0.02em;
-        }
-      `}</style>
-      <FadeInWhenVisible>
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="font-serif text-3xl md:text-4xl font-bold text-slate-800">
-              Khám Phá Bộ Sưu Tập
-            </h2>
-            <p className="mt-3 text-lg text-slate-600 max-w-3xl mx-auto">
-              Trượt nhẹ trên điện thoại hoặc dùng các nút bên dưới để khám phá
-              những khung hình nổi bật nhất từ LALA‑LYCHEE.
-            </p>
-            <p className="mt-2 text-sm text-slate-400 max-w-2xl mx-auto hidden sm:block">
-              Mẹo: Kéo sang trái để bỏ qua, kéo sang phải để thêm vào mục yêu
-              thích.
-            </p>
-          </div>
+//   return (
+//     <section id="card-stack" className="py-24 bg-rose-50/50 overflow-x-hidden">
+//       <style jsx>{`
+//         .card-shadow {
+//           box-shadow: 0 20px 60px -20px rgba(2, 6, 23, 0.35);
+//         }
+//         .ring-focus:focus-visible {
+//           outline: none;
+//           box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.45);
+//         }
+//         .swipe-badge {
+//           letter-spacing: 0.02em;
+//         }
+//       `}</style>
+//       <FadeInWhenVisible>
+//         <div className="container mx-auto px-6">
+//           <div className="text-center mb-16">
+//             <h2 className="font-serif text-3xl md:text-4xl font-bold text-slate-800">
+//               Khám Phá Bộ Sưu Tập
+//             </h2>
+//             <p className="mt-3 text-lg text-slate-600 max-w-3xl mx-auto">
+//               Trượt nhẹ trên điện thoại hoặc dùng các nút bên dưới để khám phá
+//               những khung hình nổi bật nhất từ LALA‑LYCHEE.
+//             </p>
+//             <p className="mt-2 text-sm text-slate-400 max-w-2xl mx-auto hidden sm:block">
+//               Mẹo: Kéo sang trái để bỏ qua, kéo sang phải để thêm vào mục yêu
+//               thích.
+//             </p>
+//           </div>
 
-          <div
-            className="relative w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto h-[480px] md:h-[560px] cursor-grab active:cursor-grabbing overflow-hidden overscroll-contain rounded-3xl select-none touch-pan-y"
-            role="region"
-            aria-label="Bộ sưu tập dạng thẻ có thể kéo và vuốt"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowLeft") handleSwipe("left");
-              if (e.key === "ArrowRight") handleSwipe("right");
-            }}
-            onMouseDown={handleDragStart}
-            onMouseMove={handleDragMove}
-            onMouseUp={handleDragEnd}
-            onMouseLeave={handleDragEnd}
-            onTouchStart={handleDragStart}
-            onTouchMove={handleDragMove}
-            onTouchEnd={handleDragEnd}
-          >
-            {cards.length > 0 ? (
-              displayedCards.map((card, index) => {
-                const isTop = index === 0;
-                return (
-                  <div
-                    key={card.id}
-                    className="absolute w-full h-full rounded-2xl bg-white transition-all duration-300 ease-in-out card-shadow ring-focus"
-                    style={
-                      isTop
-                        ? {
-                            ...topCardStyle(),
-                            zIndex: 10 - index,
-                          }
-                        : {
-                            transform: `scale(${
-                              1 - (index + 1) * 0.05
-                            }) translateY(${(index + 1) * -10}px)`,
-                            zIndex: 10 - index,
-                            opacity: 1 - (index + 1) * 0.1,
-                          }
-                    }
-                  >
-                    <img
-                      src={card.imageUrl}
-                      alt={card.title}
-                      className="w-full h-full object-cover rounded-2xl select-none"
-                      draggable={false}
-                      onError={handleImageError}
-                    />
-                    <div
-                      className="absolute inset-0 rounded-2xl ring-1 ring-black/10"
-                      aria-hidden
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 p-6 md:p-7 bg-gradient-to-t from-black/70 via-black/30 to-transparent rounded-b-2xl text-white">
-                      <h3 className="text-xl md:text-2xl font-bold font-serif drop-shadow">
-                        {card.title}
-                      </h3>
-                      <p className="text-xs md:text-sm opacity-90">
-                        {card.category}
-                      </p>
-                    </div>
-                    {isTop && (
-                      <>
-                        <div
-                          className="pointer-events-none absolute top-4 left-4 px-3 py-1 rounded-md border-2 border-rose-500 bg-rose-600/10 text-rose-600 font-semibold uppercase text-xs swipe-badge"
-                          style={{
-                            opacity: nopeOpacity,
-                            transform: `rotate(-8deg)`,
-                          }}
-                          aria-hidden
-                        >
-                          Bỏ qua
-                        </div>
-                        <div
-                          className="pointer-events-none absolute top-4 right-4 px-3 py-1 rounded-md border-2 border-emerald-500 bg-emerald-600/10 text-emerald-600 font-semibold uppercase text-xs swipe-badge"
-                          style={{
-                            opacity: likeOpacity,
-                            transform: `rotate(8deg)`,
-                          }}
-                          aria-hidden
-                        >
-                          Yêu thích
-                        </div>
-                      </>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center text-slate-500">
-                Đã xem hết! Bộ sưu tập sẽ được làm mới.
-              </div>
-            )}
-          </div>
+//           <div
+//             className="relative w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto h-[480px] md:h-[560px] cursor-grab active:cursor-grabbing overflow-hidden overscroll-contain rounded-3xl select-none touch-pan-y"
+//             role="region"
+//             aria-label="Bộ sưu tập dạng thẻ có thể kéo và vuốt"
+//             tabIndex={0}
+//             onKeyDown={(e) => {
+//               if (e.key === "ArrowLeft") handleSwipe("left");
+//               if (e.key === "ArrowRight") handleSwipe("right");
+//             }}
+//             onMouseDown={handleDragStart}
+//             onMouseMove={handleDragMove}
+//             onMouseUp={handleDragEnd}
+//             onMouseLeave={handleDragEnd}
+//             onTouchStart={handleDragStart}
+//             onTouchMove={handleDragMove}
+//             onTouchEnd={handleDragEnd}
+//           >
+//             {cards.length > 0 ? (
+//               displayedCards.map((card, index) => {
+//                 const isTop = index === 0;
+//                 return (
+//                   <div
+//                     key={card.id}
+//                     className="absolute w-full h-full rounded-2xl bg-white transition-all duration-300 ease-in-out card-shadow ring-focus"
+//                     style={
+//                       isTop
+//                         ? {
+//                             ...topCardStyle(),
+//                             zIndex: 10 - index,
+//                           }
+//                         : {
+//                             transform: `scale(${
+//                               1 - (index + 1) * 0.05
+//                             }) translateY(${(index + 1) * -10}px)`,
+//                             zIndex: 10 - index,
+//                             opacity: 1 - (index + 1) * 0.1,
+//                           }
+//                     }
+//                   >
+//                     <img
+//                       src={card.imageUrl}
+//                       alt={card.title}
+//                       className="w-full h-full object-cover rounded-2xl select-none"
+//                       draggable={false}
+//                       onError={handleImageError}
+//                     />
+//                     <div
+//                       className="absolute inset-0 rounded-2xl ring-1 ring-black/10"
+//                       aria-hidden
+//                     />
+//                     <div className="absolute bottom-0 left-0 right-0 p-6 md:p-7 bg-gradient-to-t from-black/70 via-black/30 to-transparent rounded-b-2xl text-white">
+//                       <h3 className="text-xl md:text-2xl font-bold font-serif drop-shadow">
+//                         {card.title}
+//                       </h3>
+//                       <p className="text-xs md:text-sm opacity-90">
+//                         {card.category}
+//                       </p>
+//                     </div>
+//                     {isTop && (
+//                       <>
+//                         <div
+//                           className="pointer-events-none absolute top-4 left-4 px-3 py-1 rounded-md border-2 border-rose-500 bg-rose-600/10 text-rose-600 font-semibold uppercase text-xs swipe-badge"
+//                           style={{
+//                             opacity: nopeOpacity,
+//                             transform: `rotate(-8deg)`,
+//                           }}
+//                           aria-hidden
+//                         >
+//                           Bỏ qua
+//                         </div>
+//                         <div
+//                           className="pointer-events-none absolute top-4 right-4 px-3 py-1 rounded-md border-2 border-emerald-500 bg-emerald-600/10 text-emerald-600 font-semibold uppercase text-xs swipe-badge"
+//                           style={{
+//                             opacity: likeOpacity,
+//                             transform: `rotate(8deg)`,
+//                           }}
+//                           aria-hidden
+//                         >
+//                           Yêu thích
+//                         </div>
+//                       </>
+//                     )}
+//                   </div>
+//                 );
+//               })
+//             ) : (
+//               <div className="text-center text-slate-500">
+//                 Đã xem hết! Bộ sưu tập sẽ được làm mới.
+//               </div>
+//             )}
+//           </div>
 
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-5 mt-8">
-            <button
-              onClick={() => handleSwipe("left")}
-              aria-label="Bỏ qua"
-              className="inline-flex items-center gap-2 bg-white/90 backdrop-blur rounded-full px-5 py-3 shadow-lg text-rose-700 hover:bg-rose-100 active:scale-95 transition will-change-transform ring-focus"
-            >
-              <XCircle size={22} />
-              <span className="font-medium">Bỏ qua (←)</span>
-            </button>
-            <button
-              onClick={() => handleSwipe("right")}
-              aria-label="Yêu thích"
-              className="inline-flex items-center gap-2 bg-white/90 backdrop-blur rounded-full px-5 py-3 shadow-lg text-emerald-600 hover:bg-emerald-100 active:scale-95 transition will-change-transform ring-focus"
-            >
-              <Heart size={22} />
-              <span className="font-medium">Yêu thích (→)</span>
-            </button>
-          </div>
+//           <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-5 mt-8">
+//             <button
+//               onClick={() => handleSwipe("left")}
+//               aria-label="Bỏ qua"
+//               className="inline-flex items-center gap-2 bg-white/90 backdrop-blur rounded-full px-5 py-3 shadow-lg text-rose-700 hover:bg-rose-100 active:scale-95 transition will-change-transform ring-focus"
+//             >
+//               <XCircle size={22} />
+//               <span className="font-medium">Bỏ qua (←)</span>
+//             </button>
+//             <button
+//               onClick={() => handleSwipe("right")}
+//               aria-label="Yêu thích"
+//               className="inline-flex items-center gap-2 bg-white/90 backdrop-blur rounded-full px-5 py-3 shadow-lg text-emerald-600 hover:bg-emerald-100 active:scale-95 transition will-change-transform ring-focus"
+//             >
+//               <Heart size={22} />
+//               <span className="font-medium">Yêu thích (→)</span>
+//             </button>
+//           </div>
 
-          {lastAction && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="mt-4 text-center text-sm text-slate-500"
-            >
-              {lastAction}
-            </div>
-          )}
-        </div>
-      </FadeInWhenVisible>
-    </section>
-  );
-};
+//           {lastAction && (
+//             <div
+//               role="status"
+//               aria-live="polite"
+//               className="mt-4 text-center text-sm text-slate-500"
+//             >
+//               {lastAction}
+//             </div>
+//           )}
+//         </div>
+//       </FadeInWhenVisible>
+//     </section>
+//   );
+// };
 
 const OurCraftSection: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   return (
-    <section id="craft" className="py-24 bg-rose-50/50">
+    <section
+      id="craft"
+      className="py-24 bg-rose-50/50 container m-auto rounded-t-2xl"
+    >
       <FadeInWhenVisible>
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
@@ -1367,8 +1578,8 @@ const SocialProofSection: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             {/* Testimonials Column */}
             <div id="testimonials">
-              <h3 className="font-serif text-2xl font-bold text-slate-700 text-center mb-8">
-                Khách Hàng Nói Gì?
+              <h3 className="flex justify-center items-center font-serif text-2xl font-bold text-slate-700 text-center mb-8 pb-2">
+                Khách Hàng Phản Hồi ?
               </h3>
               <div
                 className="relative max-w-md mx-auto h-80 cursor-grab active:cursor-grabbing"
@@ -1491,53 +1702,6 @@ const SocialProofSection: React.FC = () => {
 //     </div>
 //   </section>
 // );
-
-const CursorEffect: React.FC = () => {
-  const [points, setPoints] = useState<{ x: number; y: number; id: number }[]>(
-    []
-  );
-  const nextId = useRef(0);
-
-  const addPoint = useCallback((x: number, y: number) => {
-    const newPoint = { x, y, id: nextId.current++ };
-    setPoints((prevPoints) => [...prevPoints, newPoint]);
-    setTimeout(() => {
-      setPoints((prevPoints) => prevPoints.filter((p) => p.id !== newPoint.id));
-    }, 500);
-  }, []);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      addPoint(e.clientX, e.clientY);
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        addPoint(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("touchmove", handleTouchMove);
-    };
-  }, [addPoint]);
-
-  return (
-    <div className="pointer-events-none fixed inset-0 z-[200] h-screen w-screen overflow-hidden">
-      {points.map((point) => (
-        <div
-          key={point.id}
-          className="absolute w-2 h-2 bg-rose-300 rounded-full animate-cursor-sparkle"
-          style={{ left: point.x - 4, top: point.y - 4 }}
-        />
-      ))}
-    </div>
-  );
-};
 
 const ScrollToTopButton: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -1682,30 +1846,19 @@ export default function App() {
         <CursorEffect />
         <main>
           <InteractiveHeroSlider />
-          <div className="group">
-            <MarqueeBannerSection />
-          </div>
-          <InteractiveShowcaseSection />
-          <SocialProofSection />
+          <MarqueeBannerSection />
           <AboutSection />
+          {/* 
+          Sản Phẩm Nổi Bật
+          */}
           <FeaturedProductsSection />
-          <CardStackSection />
+
+          {/* Sự Tin Tưởng Từ Cộng Đồng */}
+          <SocialProofSection />
           <CollectionSection />
           <OurCraftSection />
-          {/* <CtaSection /> */}
-          <div className="w-full h-full flex justify-around items-center rounded-lg">
-            <div></div>
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d328.8131806159285!2d106.49132371003373!3d20.810141254928457!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x437742396b4f2dcd%3A0xd03a9e098934bdcf!2sLALA-LYCHEEE!5e1!3m2!1svi!2s!4v1755225875310!5m2!1svi!2s"
-              className="rounded-lg"
-              width="600"
-              height="450"
-              style={{ border: "0" }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
-          </div>
+          {/* Vị Trí Cải Tạo */}
+          <MapsLocationCompany />
         </main>
 
         <ScrollToTopButton />

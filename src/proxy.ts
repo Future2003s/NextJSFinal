@@ -53,7 +53,7 @@ const adminRouteRedirects: Record<string, string> = {
   "/settings": "/admin/settings",
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathName = request.nextUrl.pathname;
   const url = request.nextUrl.clone();
 

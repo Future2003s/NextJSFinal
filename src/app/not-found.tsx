@@ -17,13 +17,14 @@ export default function NotFound() {
             </span>
           </div>
           <h1 className="text-white text-2xl md:text-3xl font-bold mb-2">
-            Oops! Trang không tồn tại
+            Oops - Lỗi Rồi ! Không Tìm Thấy
           </h1>
-          <p className="text-gray-300 mb-8">
-            Đường dẫn bạn truy cập có thể đã bị thay đổi hoặc không còn khả
-            dụng.
-          </p>
-
+          <Link href={"/"}>
+            <p className="text-gray-300 mb-8 hover:underline hover:text-blue-500">
+              Đường dẫn bạn truy cập có thể đã bị thay đổi hoặc không còn khả
+              dụng. Ấn Chọn để quay về trang chủ.
+            </p>
+          </Link>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/"
